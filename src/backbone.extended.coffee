@@ -1,7 +1,8 @@
 Backbone = @Backbone or typeof require is 'function' and require 'backbone'
 
 Backbone.Extended = {}
-Backbone.extensions or= {}
+extensions = Backbone.extensions ?= (name, fn) -> @[name] = fn
+extensions.all or= extensions
 
 capitalize = (str) ->
   if str then ( str[0].toUpperCase() + str.substring 1 ) else ''
@@ -9,17 +10,38 @@ capitalize = (str) ->
 for moduleType in [ 'Model', 'Router', 'View', 'Collection' ]
   do (moduleType) ->
     moduleTypeLowercase = moduleType.toLowerCase()
-    Backbone.extensions[moduleTypeLowercase] or= {}
+    extensions[moduleTypeLowercase] or= (name, fn) -> @[name] = fn
 
     class Backbone.Extended[moduleType] extends Backbone[moduleType]
-      constructor: ->
+      constructor: (args...) ->
         super
+        options = if moduleType in [ 'Model', 'Collection' ] then args[1] else args[0]
+
         for type in ['all', moduleTypeLowercase]
-          globalConfig = Backbone.extensions[type].defaults
-          config = _.extend {}, globalConfig, @extensions
+          globalConfig = extensions[type].defaults
+          config = _.extend {}, globalConfig, @extensions, options.extensions
+          @_extensionConfig = config
           for key, value of config
             if value
-              res = Backbone.extensions[type].call @, config
-              _.extend @, res
+              extension = extensions[type]
+              if typeof extension is 'function'
+                res = extensions[type].call @, @, value, args...
+              else
+                extension.constructor.call @, @, value, args...
+                res = extension
+              if res
+                mixin = {}
+                for key, value of res
+                  currentKey = @[key]
+                  if key isnt 'constructor'
+                    do (key, value, currentKey) =>
+                      mixin[key] = ->
+                        originalSuper = @_super
+                        @_super = currentKey
+                        res = value.call @, arguments...
+                        @_super = originalSuper
+                        res
+
+                      _.extend @, mixin
 
 Backbone.Extended.VERSION = '0.0.2'
