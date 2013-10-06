@@ -1,3 +1,5 @@
+Backbone = @Backbone or typeof require is 'function' and require 'backbone'
+
 Backbone.Extended = {}
 Backbone.extensions or= {}
 
