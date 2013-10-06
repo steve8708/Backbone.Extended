@@ -20,4 +20,4 @@ for moduleType in [ 'Model', 'Router', 'View', 'Collection' ]
               res = Backbone.extensions[type].call @, config
               _.extend @, res
 
-Backbone.Extended.VERSION = '0.0.1'
+Backbone.Extended.VERSION = '0.0.2'
