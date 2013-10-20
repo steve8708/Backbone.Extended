@@ -1,3 +1,5 @@
+/* backbone.extended.js v0.0.5 (coffeescript output) */ 
+
 (function() {
   var Backbone, capitalize, extensions, moduleType, _fn, _i, _len, _ref,
     __hasProp = {}.hasOwnProperty,
@@ -92,6 +94,6 @@
     _fn(moduleType);
   }
 
-  Backbone.Extended.VERSION = '0.0.4';
+  Backbone.Extended.VERSION = '0.0.5';
 
 }).call(this);
