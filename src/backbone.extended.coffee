@@ -16,7 +16,7 @@ for moduleType in [ 'Model', 'Router', 'View', 'Collection' ]
       constructor: (args...) ->
         super
         isModelOrCollection = moduleType in [ 'Model', 'Collection' ]
-        options = if isModelorCollection then args[1] else args[0]
+        options = if isModelOrCollection then args[1] else args[0]
 
         for type in ['all', moduleTypeLowercase]
           globalConfig = extensions[type].defaults
