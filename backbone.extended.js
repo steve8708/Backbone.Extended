@@ -1,13 +1,18 @@
-/* backbone.extended.js v0.0.2 (coffeescript output) */ 
-
 (function() {
-  var capitalize, moduleType, _fn, _i, _len, _ref,
+  var Backbone, capitalize, extensions, moduleType, _fn, _i, _len, _ref,
     __hasProp = {}.hasOwnProperty,
-    __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+    __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    __slice = [].slice;
+
+  Backbone = this.Backbone || typeof require === 'function' && require('backbone');
 
   Backbone.Extended = {};
 
-  Backbone.extensions || (Backbone.extensions = {});
+  extensions = Backbone.extensions != null ? Backbone.extensions : Backbone.extensions = function(name, fn) {
+    return this[name] = fn;
+  };
+
+  extensions.all || (extensions.all = extensions);
 
   capitalize = function(str) {
     if (str) {
@@ -19,25 +24,58 @@
 
   _ref = ['Model', 'Router', 'View', 'Collection'];
   _fn = function(moduleType) {
-    var moduleTypeLowercase, _base;
+    var moduleTypeLowercase;
     moduleTypeLowercase = moduleType.toLowerCase();
-    (_base = Backbone.extensions)[moduleTypeLowercase] || (_base[moduleTypeLowercase] = {});
+    extensions[moduleTypeLowercase] || (extensions[moduleTypeLowercase] = function(name, fn) {
+      return this[name] = fn;
+    });
     return Backbone.Extended[moduleType] = (function(_super) {
       __extends(_Class, _super);
 
       function _Class() {
-        var config, globalConfig, key, res, type, value, _j, _len1, _ref1;
+        var args, config, currentKey, extension, extensionFn, globalConfig, isModelOrCollection, key, mixin, options, res, type, value, _j, _len1, _ref1, _ref2,
+          _this = this;
+        args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
         _Class.__super__.constructor.apply(this, arguments);
+        isModelOrCollection = moduleType === 'Model' || moduleType === 'Collection';
+        options = isModelorCollection ? args[1] : args[0];
         _ref1 = ['all', moduleTypeLowercase];
         for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
           type = _ref1[_j];
-          globalConfig = Backbone.extensions[type].defaults;
-          config = _.extend({}, globalConfig, this.extensions);
+          globalConfig = extensions[type].defaults;
+          config = _.extend({}, globalConfig, this.extensions, options.extensions);
+          this._extensionConfig = config;
           for (key in config) {
             value = config[key];
             if (value) {
-              res = Backbone.extensions[type].call(this, config);
-              _.extend(this, res);
+              extension = extensions[type];
+              if (typeof extension === 'function') {
+                extensionFn = extensions[type][key] || extensions.all[key];
+                res = extensionFn.call.apply(extensionFn, [this, this, value].concat(__slice.call(args)));
+              } else {
+                (_ref2 = extension.constructor).call.apply(_ref2, [this, this, value].concat(__slice.call(args)));
+                res = extension;
+              }
+              if (res) {
+                mixin = {};
+                for (key in res) {
+                  value = res[key];
+                  currentKey = this[key];
+                  if (key !== 'constructor') {
+                    (function(key, value, currentKey) {
+                      mixin[key] = function() {
+                        var originalSuper;
+                        originalSuper = this._super;
+                        this._super = currentKey;
+                        res = value.call.apply(value, [this].concat(__slice.call(arguments)));
+                        this._super = originalSuper;
+                        return res;
+                      };
+                      return _.extend(_this, mixin);
+                    })(key, value, currentKey);
+                  }
+                }
+              }
             }
           }
         }
@@ -52,6 +90,6 @@
     _fn(moduleType);
   }
 
-  Backbone.Extended.VERSION = '0.0.2';
+  Backbone.Extended.VERSION = '0.0.3';
 
 }).call(this);

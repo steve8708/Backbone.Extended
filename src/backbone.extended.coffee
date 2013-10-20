@@ -15,7 +15,8 @@ for moduleType in [ 'Model', 'Router', 'View', 'Collection' ]
     class Backbone.Extended[moduleType] extends Backbone[moduleType]
       constructor: (args...) ->
         super
-        options = if moduleType in [ 'Model', 'Collection' ] then args[1] else args[0]
+        isModelOrCollection = moduleType in [ 'Model', 'Collection' ]
+        options = if isModelorCollection then args[1] else args[0]
 
         for type in ['all', moduleTypeLowercase]
           globalConfig = extensions[type].defaults
@@ -25,7 +26,8 @@ for moduleType in [ 'Model', 'Router', 'View', 'Collection' ]
             if value
               extension = extensions[type]
               if typeof extension is 'function'
-                res = extensions[type].call @, @, value, args...
+                extensionFn = extensions[type][key] or extensions.all[key]
+                res = extensionFn.call @, @, value, args...
               else
                 extension.constructor.call @, @, value, args...
                 res = extension
@@ -44,4 +46,4 @@ for moduleType in [ 'Model', 'Router', 'View', 'Collection' ]
 
                       _.extend @, mixin
 
-Backbone.Extended.VERSION = '0.0.2'
+Backbone.Extended.VERSION = '0.0.3'
