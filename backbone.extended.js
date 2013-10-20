@@ -1,5 +1,3 @@
-/* backbone.extended.js v0.0.4 (coffeescript output) */ 
-
 (function() {
   var Backbone, capitalize, extensions, moduleType, _fn, _i, _len, _ref,
     __hasProp = {}.hasOwnProperty,
@@ -35,47 +33,49 @@
       __extends(_Class, _super);
 
       function _Class() {
-        var args, config, currentKey, extension, extensionFn, globalConfig, isModelOrCollection, key, mixin, options, res, type, value, _j, _len1, _ref1, _ref2,
+        var args, config, currentKey, extension, extensionFn, globalConfig, globalDefaults, isModelOrCollection, key, mixin, moduleTypeDefaults, options, res, type, value, _ref1,
           _this = this;
         args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
         _Class.__super__.constructor.apply(this, arguments);
         isModelOrCollection = moduleType === 'Model' || moduleType === 'Collection';
-        options = isModelorCollection ? args[1] : args[0];
-        _ref1 = ['all', moduleTypeLowercase];
-        for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
-          type = _ref1[_j];
-          globalConfig = extensions[type].defaults;
-          config = _.extend({}, globalConfig, this.extensions, options.extensions);
-          this._extensionConfig = config;
-          for (key in config) {
-            value = config[key];
-            if (value) {
-              extension = extensions[type];
-              if (typeof extension === 'function') {
-                extensionFn = extensions[type][key] || extensions.all[key];
+        options = isModelOrCollection ? args[1] : args[0];
+        options || (options = {});
+        type = moduleTypeLowercase;
+        globalDefaults = extensions.all.defaults;
+        moduleTypeDefaults = extensions[type].defaults;
+        globalConfig = _.extend(globalDefaults, moduleTypeDefaults);
+        config = _.extend({}, globalConfig, this.extensions, options.extensions, this.plugins, options.plugins);
+        this._extensionConfig = config;
+        for (key in config) {
+          value = config[key];
+          if (value) {
+            extension = extensions[type];
+            if (typeof extension === 'function') {
+              extensionFn = extensions.all[key] || extensions[type][key];
+              if (extensionFn) {
                 res = extensionFn.call.apply(extensionFn, [this, this, value].concat(__slice.call(args)));
-              } else {
-                (_ref2 = extension.constructor).call.apply(_ref2, [this, this, value].concat(__slice.call(args)));
-                res = extension;
               }
-              if (res) {
-                mixin = {};
-                for (key in res) {
-                  value = res[key];
-                  currentKey = this[key];
-                  if (key !== 'constructor') {
-                    (function(key, value, currentKey) {
-                      mixin[key] = function() {
-                        var originalSuper;
-                        originalSuper = this._super;
-                        this._super = currentKey;
-                        res = value.call.apply(value, [this].concat(__slice.call(arguments)));
-                        this._super = originalSuper;
-                        return res;
-                      };
-                      return _.extend(_this, mixin);
-                    })(key, value, currentKey);
-                  }
+            } else {
+              (_ref1 = extension.constructor).call.apply(_ref1, [this, this, value].concat(__slice.call(args)));
+              res = extension;
+            }
+            if (res) {
+              mixin = {};
+              for (key in res) {
+                value = res[key];
+                currentKey = this[key];
+                if (key !== 'constructor') {
+                  (function(key, value, currentKey) {
+                    mixin[key] = function() {
+                      var originalSuper;
+                      originalSuper = this._super;
+                      this._super = currentKey;
+                      res = value.call.apply(value, [this].concat(__slice.call(arguments)));
+                      this._super = originalSuper;
+                      return res;
+                    };
+                    return _.extend(_this, mixin);
+                  })(key, value, currentKey);
                 }
               }
             }

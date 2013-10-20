@@ -17,33 +17,39 @@ for moduleType in [ 'Model', 'Router', 'View', 'Collection' ]
         super
         isModelOrCollection = moduleType in [ 'Model', 'Collection' ]
         options = if isModelOrCollection then args[1] else args[0]
+        options or= {}
+        type = moduleTypeLowercase
+        globalDefaults = extensions.all.defaults
+        moduleTypeDefaults = extensions[type].defaults
 
-        for type in ['all', moduleTypeLowercase]
-          globalConfig = extensions[type].defaults
-          config = _.extend {}, globalConfig, @extensions, options.extensions
-          @_extensionConfig = config
-          for key, value of config
-            if value
-              extension = extensions[type]
-              if typeof extension is 'function'
-                extensionFn = extensions[type][key] or extensions.all[key]
+        # FIXME: break this into separate functions
+        globalConfig = _.extend globalDefaults, moduleTypeDefaults
+        config = _.extend {}, globalConfig, @extensions,
+          options.extensions, @plugins, options.plugins
+        @_extensionConfig = config
+        for key, value of config
+          if value
+            extension = extensions[type]
+            if typeof extension is 'function'
+              extensionFn = extensions.all[key] or extensions[type][key]
+              if extensionFn
                 res = extensionFn.call @, @, value, args...
-              else
-                extension.constructor.call @, @, value, args...
-                res = extension
-              if res
-                mixin = {}
-                for key, value of res
-                  currentKey = @[key]
-                  if key isnt 'constructor'
-                    do (key, value, currentKey) =>
-                      mixin[key] = ->
-                        originalSuper = @_super
-                        @_super = currentKey
-                        res = value.call @, arguments...
-                        @_super = originalSuper
-                        res
+            else
+              extension.constructor.call @, @, value, args...
+              res = extension
+            if res
+              mixin = {}
+              for key, value of res
+                currentKey = @[key]
+                if key isnt 'constructor'
+                  do (key, value, currentKey) =>
+                    mixin[key] = ->
+                      originalSuper = @_super
+                      @_super = currentKey
+                      res = value.call @, arguments...
+                      @_super = originalSuper
+                      res
 
-                      _.extend @, mixin
+                    _.extend @, mixin
 
 Backbone.Extended.VERSION = '0.0.4'
