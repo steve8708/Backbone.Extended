@@ -7,10 +7,26 @@ extensions.all or= extensions
 capitalize = (str) ->
   if str then ( str[0].toUpperCase() + str.substring 1 ) else ''
 
+defaults = (args...) ->
+  if args.length is 1
+    defaults = args[0]
+  else
+    defaults = {}
+    defaults[args[0]] = args[1]
+
+  for key, value of defaults
+    @[key] = value
+  @
+
+extensions.defaults = defaults
+
 for moduleType in [ 'Model', 'Router', 'View', 'Collection' ]
   do (moduleType) ->
     moduleTypeLowercase = moduleType.toLowerCase()
+
     extensions[moduleTypeLowercase] or= (name, fn) -> @[name] = fn
+
+    extensions[moduleTypeLowercase].defaults or= defaults
 
     class Backbone.Extended[moduleType] extends Backbone[moduleType]
       constructor: (args...) ->
@@ -41,7 +57,7 @@ for moduleType in [ 'Model', 'Router', 'View', 'Collection' ]
               mixin = {}
               for key, value of res
                 currentKey = @[key]
-                if key isnt 'constructor'
+                if typeof value is 'function' and key isnt 'constructor'
                   do (key, value, currentKey) =>
                     mixin[key] = ->
                       originalSuper = @_super
