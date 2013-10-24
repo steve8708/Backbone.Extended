@@ -25,7 +25,6 @@ for moduleType in [ 'Model', 'Router', 'View', 'Collection' ]
     moduleTypeLowercase = moduleType.toLowerCase()
 
     extensions[moduleTypeLowercase] or= (name, fn) -> @[name] = fn
-
     extensions[moduleTypeLowercase].defaults or= defaults
 
     class Backbone.Extended[moduleType] extends Backbone[moduleType]
@@ -35,19 +34,25 @@ for moduleType in [ 'Model', 'Router', 'View', 'Collection' ]
         options = if isModelOrCollection then args[1] else args[0]
         options or= {}
         type = moduleTypeLowercase
-        globalDefaults = extensions.all.defaults
+
+        if @plugins.ignoreGlobalDeafults
+          globalDefaults =  {}
+        else
+          globalDefaults = extensions.all.defaults
+
         moduleTypeDefaults = extensions[type].defaults
 
-        # FIXME: break this into separate functions
         globalConfig = _.extend globalDefaults, moduleTypeDefaults
         config = _.extend {}, globalConfig, @extensions,
           options.extensions, @plugins, options.plugins
         @_extensionConfig = config
+
+        # FIXME: break this into separate functions
         for key, value of config
           if value
             extension = extensions[type]
             if typeof extension is 'function'
-              extensionFn = extensions.all[key] or extensions[type][key]
+              extensionFn = extensions[type][key] or extensions.all[key]
               if extensionFn
                 res = extensionFn.call @, @, value, args...
             else
@@ -62,7 +67,7 @@ for moduleType in [ 'Model', 'Router', 'View', 'Collection' ]
                     mixin[key] = ->
                       originalSuper = @_super
                       @_super = currentKey
-                      res = value.call @, arguments...
+                      res = value.apply @, arguments
                       @_super = originalSuper
                       res
 

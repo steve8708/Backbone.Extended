@@ -1,5 +1,3 @@
-/* backbone.extended.js v0.1.0 (coffeescript output) */ 
-
 (function() {
   var Backbone, capitalize, defaults, extensions, moduleType, _fn, _i, _len, _ref,
     __slice = [].slice,
@@ -62,7 +60,11 @@
         options = isModelOrCollection ? args[1] : args[0];
         options || (options = {});
         type = moduleTypeLowercase;
-        globalDefaults = extensions.all.defaults;
+        if (this.plugins.ignoreGlobalDeafults) {
+          globalDefaults = {};
+        } else {
+          globalDefaults = extensions.all.defaults;
+        }
         moduleTypeDefaults = extensions[type].defaults;
         globalConfig = _.extend(globalDefaults, moduleTypeDefaults);
         config = _.extend({}, globalConfig, this.extensions, options.extensions, this.plugins, options.plugins);
@@ -72,7 +74,7 @@
           if (value) {
             extension = extensions[type];
             if (typeof extension === 'function') {
-              extensionFn = extensions.all[key] || extensions[type][key];
+              extensionFn = extensions[type][key] || extensions.all[key];
               if (extensionFn) {
                 res = extensionFn.call.apply(extensionFn, [this, this, value].concat(__slice.call(args)));
               }
@@ -91,7 +93,7 @@
                       var originalSuper;
                       originalSuper = this._super;
                       this._super = currentKey;
-                      res = value.call.apply(value, [this].concat(__slice.call(arguments)));
+                      res = value.apply(this, arguments);
                       this._super = originalSuper;
                       return res;
                     };
