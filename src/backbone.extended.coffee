@@ -73,4 +73,4 @@ for moduleType in [ 'Model', 'Router', 'View', 'Collection' ]
 
                     _.extend @, mixin
 
-Backbone.Extended.VERSION = '0.1.0'
+Backbone.Extended.VERSION = '0.2.0'
