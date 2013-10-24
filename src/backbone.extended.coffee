@@ -35,7 +35,7 @@ for moduleType in [ 'Model', 'Router', 'View', 'Collection' ]
         options or= {}
         type = moduleTypeLowercase
 
-        if @plugins.ignoreGlobalDeafults
+        if @plugins and @plugins.ignoreGlobalDeafults
           globalDefaults =  {}
         else
           globalDefaults = extensions.all.defaults
@@ -61,16 +61,16 @@ for moduleType in [ 'Model', 'Router', 'View', 'Collection' ]
             if res
               mixin = {}
               for key, value of res
-                currentKey = @[key]
+                currentValue = @[key]
                 if typeof value is 'function' and key isnt 'constructor'
-                  do (key, value, currentKey) =>
+                  do (key, value, currentValue) =>
                     mixin[key] = ->
                       originalSuper = @_super
-                      @_super = currentKey
+                      @_super = currentValue
                       res = value.apply @, arguments
                       @_super = originalSuper
                       res
 
-                    _.extend @, mixin
+              _.extend @, mixin
 
 Backbone.Extended.VERSION = '0.2.0'
